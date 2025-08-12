@@ -4,52 +4,74 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>セミジェネレーター</title>
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Cg fill="none" stroke="%23fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M32 9c-3 0-6 2-7 5-1 2-1 4-1 6 0 7 4 17 8 24 4-7 8-17 8-24 0-2 0-4-1-6-1-3-4-5-7-5Z"/%3E%3Cpath d="M20 23c-3-1-7-4-9-6m42 0c-2 2-6 5-9 6"/%3E%3Cpath d="M13 28c6 2 38 2 44 0"/%3E%3Cpath d="M24 21c2 2 12 2 16 0"/%3E%3C/g%3E%3C/svg%3E' />
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="セミジェネレーター">
+<meta property="og:title" content="セミジェネレーター - 文字数で鳴くやつ">
+<meta property="og:description" content="スライダーで文字数を動かすと、ﾐ/ﾝ/ｰのセミ鳴きがリアルタイムに鳴く（テキスト生成）。共有リンクはシード固定で同じ結果に。">
+<meta property="og:url" content="https://example.com/">
+<meta property="og:image" content="https://example.com/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="セミジェネレーター - 文字数で鳴くやつ">
+<meta name="twitter:description" content="スライダー操作で即時生成。共有はシード固定。">
+<meta name="twitter:image" content="https://example.com/ogp.png">
 <style>
-  :root { --bg: #0f1220; --card:#171a2b; --acc:#7dd3fc; --txt:#e6e6f0; --mut:#96a0b5; }
-  * { box-sizing: border-box; }
-  body { margin: 0; padding: 48px 20px; color: var(--txt);
+  :root { --bg:#0f1220; --card:#171a2b; --acc:#7dd3fc; --txt:#e6e6f0; --mut:#96a0b5; }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ margin:0; padding:clamp(14px,4vw,40px) clamp(12px,4vw,20px); color:var(--txt);
     background: radial-gradient(1200px 600px at 20% -10%, #1b2040 0%, #0f1220 50%, #0b0d18 100%);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, Arial, sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; }
-  h1 { font-size: 28px; margin: 0 0 18px; letter-spacing: .02em; }
-  .card { background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-    border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 20px; backdrop-filter: blur(4px);
-    box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-  .controls { display:grid; gap: 14px; grid-template-columns: 1fr; align-items:center; }
-  @media (min-width: 860px){ .controls { grid-template-columns: 1fr auto; } }
-  .slider-row { display:grid; gap:10px; align-items:center; grid-template-columns: 1fr 120px 1fr; }
-  .val { font-weight: 700; min-width: 80px; text-align: right; }
-  input[type=range]{ width:100%; accent-color: var(--acc); }
-  input[type=number]{ width:100%; padding: 8px 10px; font-size:16px; color: var(--txt); background: var(--card);
-    border:1px solid rgba(255,255,255,.12); border-radius: 10px; }
-  button{ padding: 10px 14px; border-radius: 10px; border:1px solid rgba(255,255,255,.14);
-    background: #23305b; color: var(--txt); cursor: pointer; font-weight: 700; }
-  .ghost{ background:#1f2540; }
-  .rowbtn{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-  .out { margin-top: 14px; background: var(--card); border:1px solid rgba(255,255,255,.12);
-    border-radius: 12px; padding: 14px; font-family: "SF Mono","Roboto Mono","Consolas","Noto Sans Mono CJK JP",monospace;
-    min-height: 72px; white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
-  .meta { color: var(--mut); font-size: 14px; display:flex; gap:16px; margin-top: 8px; flex-wrap:wrap; align-items:center; }
-  .badge { font-size:12px; padding:4px 8px; border:1px solid rgba(255,255,255,.14); border-radius:8px; background:#1f2540; }
+    font-family: ui-sans-serif,system-ui,-apple-system,"Segoe UI","Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,Arial,sans-serif; -webkit-tap-highlight-color:transparent; }
+  .wrap{ max-width:960px; margin:0 auto; }
+  h1{ display:flex; align-items:center; gap:10px; font-size:clamp(20px,4vw,28px); margin:0 0 12px; letter-spacing:.02em; }
+  h1 svg{ width:1.2em; height:1.2em; }
+  .card{ background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:clamp(10px,3vw,18px); backdrop-filter:blur(4px); box-shadow:0 10px 30px rgba(0,0,0,.25); }
+  .controls{ display:grid; gap:14px; grid-template-columns:1fr; align-items:center; }
+  @media (min-width:740px){ .controls{ grid-template-columns:1fr auto; } }
+  .slider-row{ display:grid; gap:10px; align-items:center; grid-template-columns:1fr minmax(92px,140px) minmax(84px,120px); }
+  @media (max-width:520px){ .slider-row{ grid-template-columns:1fr minmax(92px,140px); } .val{ grid-column:1/-1; justify-self:end; } }
+  .val{ font-weight:700; text-align:right; min-width:92px; }
+  input[type=range]{ width:100%; accent-color:var(--acc); height:32px; }
+  .num{ width:100%; padding:10px 12px; font-size:16px; color:var(--txt); background:var(--card); border:1px solid rgba(255,255,255,.12); border-radius:10px; }
+  .num.invalid{ border-color:#f87171; box-shadow:0 0 0 3px rgba(248,113,113,.2); }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .btn{ padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:#23305b; color:var(--txt); font-weight:700; min-height:44px; display:inline-flex; align-items:center; gap:10px; }
+  .btn.ghost{ background:#1f2540; }
+  .btn svg{ width:18px; height:18px; }
+  @media (max-width:520px){ .toolbar{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; } .btn{ min-width:0; padding:10px 8px; font-size:14px; justify-content:center; } .btn svg{ width:16px; height:16px; } }
+  .out{ margin-top:12px; background:var(--card); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:clamp(10px,2.5vw,16px); font-family:"SF Mono","Roboto Mono","Consolas","Noto Sans Mono CJK JP",monospace; font-size:clamp(14px,2.3vw,18px); min-height:72px; white-space:pre-wrap; word-break:break-word; line-height:1.7; }
+  .meta{ color:var(--mut); font-size:14px; display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .badge{ font-size:12px; padding:4px 8px; border:1px solid rgba(255,255,255,.14); border-radius:8px; background:#1f2540; }
+  dialog#shareSheet{ width:min(560px, 96vw); border:none; border-radius:16px; background:#0f1220; color:var(--txt); padding:0; box-shadow:0 20px 50px rgba(0,0,0,.5); }
+  dialog#shareSheet::backdrop{ background:rgba(0,0,0,.6); }
+  .sheet-header{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08); }
+  .sheet-title{ font-weight:800; letter-spacing:.02em; }
+  .sheet-body{ padding:10px; display:grid; grid-template-columns:1fr; gap:10px; }
+  .share-item{ display:flex; align-items:center; gap:12px; background:#171a2b; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px; cursor:pointer; }
+  .share-item svg{ width:22px; height:22px; }
+  @media (min-width:560px){ .sheet-body{ grid-template-columns:1fr 1fr; } }
 </style>
 </head>
 <body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="icon-cicada" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 10c-3 0-6 2-7 5-1 2-1 4-1 6 0 7 4 17 8 24 4-7 8-17 8-24 0-2 0-4-1-6-1-3-4-5-7-5Z"/><path d="M22 21c-4-2-8-5-10-7M52 14c-2 2-6 5-10 7"/><path d="M12 28c7 3 33 3 40 0"/><path d="M24 21c2 2 12 2 16 0"/></g></symbol>
+  </svg>
+
   <div class="wrap">
-    <h1>セミジェネレーター</h1>
+    <h1><svg aria-hidden="true"><use href="#icon-cicada"/></svg><span>セミジェネレーター</span></h1>
     <div class="card">
       <div class="controls">
         <div class="slider-row">
           <input id="len" type="range" min="1" max="100000" value="24" />
-          <input id="lenNum" type="number" min="1" max="100000" value="24" />
+          <input id="lenNum" class="num" type="text" inputmode="numeric" pattern="\\d*" maxlength="6" placeholder="1–100000" value="24" />
           <div class="val"><span id="val">24</span> 文字</div>
         </div>
-        <div class="rowbtn">
-          <button id="regen">再生成</button>
-          <button id="share" class="ghost">共有</button>
-          <button id="copy" class="ghost">コピー</button>
+        <div class="toolbar">
+          <button id="regen" class="btn"><span>再生成</span></button>
+          <button id="shareOpen" class="btn ghost"><span>共有</span></button>
+          <button id="copy" class="btn ghost">📋<span>コピー</span></button>
         </div>
       </div>
-
       <div class="out" id="out" aria-live="polite"></div>
       <div class="meta">
         <span id="count">文字数: 0</span>
@@ -59,157 +81,124 @@
     </div>
   </div>
 
+  <dialog id="shareSheet">
+    <div class="sheet-header">
+      <div class="sheet-title">共有</div>
+      <button id="shareClose" class="btn ghost" style="min-height:36px;padding:6px 10px">閉じる</button>
+    </div>
+    <div class="sheet-body">
+      <div class="share-item" data-kind="link">共有リンクをコピー</div>
+      <div class="share-item" data-kind="twitter">Twitterに投稿</div>
+      <div class="share-item" data-kind="line">LINEで送る</div>
+      <div class="share-item" data-kind="instagram">Instagramでシェア</div>
+      <div class="share-item" data-kind="bluesky">Blueskyに投稿</div>
+    </div>
+  </dialog>
+
 <script>
 (() => {
-  // ====== 定義 ======
-  const BASES = { 1:'ﾐ', 2:'ﾐﾝ', 3:'ﾐｰﾝ', 4:'ﾐﾝﾐﾝ' };
-  const UNIT6A = 'ﾐｰﾝﾐｰﾝ'; // 6文字
-  const UNIT6B = 'ﾐﾝﾐﾝﾐﾝ'; // 6文字
-  const UNIT3 = 'ﾐｰﾝ';     // 3文字
-  const UNIT2 = 'ﾐﾝ';       // 2文字
-  const UNIT1 = 'ﾐ';        // 1文字
+  const BASES = {1:'ﾐ',2:'ﾐﾝ',3:'ﾐｰﾝ',4:'ﾐﾝﾐﾝ'};
+  const UNIT6A='ﾐｰﾝﾐｰﾝ', UNIT6B='ﾐﾝﾐﾝﾐﾝ', UNIT3='ﾐｰﾝ', UNIT2='ﾐﾝ', UNIT1='ﾐ';
+  const HASHTAG = '#セミジェネレーター';
 
-  // ====== 要素 ======
-  const $len = document.getElementById('len');
-  const $lenNum = document.getElementById('lenNum');
-  const $val = document.getElementById('val');
-  const $regen = document.getElementById('regen');
-  const $share = document.getElementById('share');
-  const $copy = document.getElementById('copy');
-  const $out = document.getElementById('out');
-  const $count = document.getElementById('count');
-  const $tokens = document.getElementById('tokens');
-  const $shareBadge = document.getElementById('shareBadge');
+  const $len=document.getElementById('len');
+  const $lenNum=document.getElementById('lenNum');
+  const $val=document.getElementById('val');
+  const $copy=document.getElementById('copy');
+  const $out=document.getElementById('out');
+  const $count=document.getElementById('count');
+  const $tokens=document.getElementById('tokens');
+  const $shareBadge=document.getElementById('shareBadge');
+  const $shareOpen=document.getElementById('shareOpen');
+  const $shareSheet=document.getElementById('shareSheet');
+  const $shareClose=document.getElementById('shareClose');
 
-  // ====== シード可能な RNG ======
-  function mulberry32(a){
-    return function(){
-      a |= 0; a = a + 0x6D2B79F5 | 0;
-      let t = Math.imul(a ^ a >>> 15, 1 | a);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+  let seededRand=null; function rand(){return seededRand?seededRand():Math.random();}
+
+  const params=new URLSearchParams(location.search);
+  const urlN=Number(params.get('n'))||null; const urlSeedStr=params.get('seed'); const urlSeed=urlSeedStr!=null?Number(urlSeedStr):null;
+
+  function clampInt(v,min,max){v=Math.floor(Number(v)||0); if(v<min)v=min; if(v>max)v=max; return v;}
+  function fisherYates(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function decompose(n){const q6=Math.floor(n/6); let r=n%6; const q3=Math.floor(r/3); r%=3; const q2=Math.floor(r/2); r%=2; const q1=r; return {q6,q3,q2,q1};}
+  function tokensFrom(n){if(n<=0)return[]; if(n<=4)return[BASES[n]]; const {q6,q3,q2,q1}=decompose(n); const ts=[]; for(let i=0;i<q6;i++) ts.push(rand()<.5?UNIT6A:UNIT6B); for(let i=0;i<q3;i++) ts.push(UNIT3); for(let i=0;i<q2;i++) ts.push(UNIT2); for(let i=0;i<q1;i++) ts.push(UNIT1); return ts;}
+  function summary(tokens){const map=new Map(); for(const t of tokens) map.set(t,(map.get(t)||0)+1); const p=[]; if(map.get(UNIT6A)) p.push(`${UNIT6A}×${map.get(UNIT6A)}`); if(map.get(UNIT6B)) p.push(`${UNIT6B}×${map.get(UNIT6B)}`); if(map.get(UNIT3)) p.push(`${UNIT3}×${map.get(UNIT3)}`); if(map.get(UNIT2)) p.push(`${UNIT2}×${map.get(UNIT2)}`); if(map.get(UNIT1)) p.push(`${UNIT1}×${map.get(UNIT1)}`); return p.join(' + ')||'-';}
+  function build(n){ const tokens=tokensFrom(n); const mixed=fisherYates(tokens.slice()); const text=mixed.join(''); $out.textContent=text; $count.textContent=`文字数: ${text.length}`; $tokens.textContent=`内訳: ${summary(tokens)}`; }
+
+  // --- スライダー：即時コミット
+  $len.addEventListener('input', ()=>{ const n=clampInt($len.value,1,100000); $val.textContent=String(n); $lenNum.value=String(n); build(n); });
+
+  // --- 数値入力：入力中も即時反映
+  let lastCommitted = 24;
+  function commitNum(){
+    let raw = $lenNum.value.replace(/\D+/g,'');
+    if(raw===''){ $lenNum.classList.add('invalid'); $lenNum.value=String(lastCommitted); raw=String(lastCommitted); }
+    let n = clampInt(raw,1,100000);
+    lastCommitted = n;
+    $len.value = String(n);
+    $val.textContent = String(n);
+    $lenNum.classList.remove('invalid');
+    build(n);
+  }
+  $lenNum.addEventListener('input', ()=>{
+    const digits = $lenNum.value.replace(/\D+/g,'');
+    if($lenNum.value !== digits) $lenNum.value = digits; // 非数字を除去
+    if(digits===''){
+      $val.textContent='—';
+      $lenNum.classList.add('invalid');
+      $out.textContent = '';
+      $count.textContent = '文字数: 0';
+      $tokens.textContent = '内訳: -';
+      return;
     }
-  }
-  let seededRand = null; // 関数 or null
-  function rand(){ return seededRand ? seededRand() : Math.random(); }
-
-  // ====== URL パラメータ（共有受け取り） ======
-  const params = new URLSearchParams(location.search);
-  const urlN = Number(params.get('n')) || null;
-  const urlSeedStr = params.get('seed');
-  const urlSeed = urlSeedStr != null ? Number(urlSeedStr) : null;
-
-  // ====== ユーティリティ ======
-  function clampInt(v, min, max){
-    v = Math.floor(Number(v)||0); if(v < min) v = min; if(v > max) v = max; return v;
-  }
-  function syncInputs(n){
-    $len.value = String(n); $lenNum.value = String(n); $val.textContent = String(n);
-  }
-  function fisherYates(arr){
-    for(let i = arr.length - 1; i > 0; i--){
-      const j = Math.floor(rand() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-  function decompose(n){
-    const q6 = Math.floor(n / 6);
-    let r = n % 6;
-    const q3 = Math.floor(r / 3);
-    r %= 3;
-    const q2 = Math.floor(r / 2);
-    r %= 2;
-    const q1 = r;
-    return { q6, q3, q2, q1 };
-  }
-  function tokensFrom(n){
-    if (n <= 0) return [];
-    if (n <= 4) return [BASES[n]];
-    const { q6, q3, q2, q1 } = decompose(n);
-    const ts = [];
-    for(let i=0;i<q6;i++) ts.push(rand() < 0.5 ? UNIT6A : UNIT6B);
-    for(let i=0;i<q3;i++) ts.push(UNIT3);
-    for(let i=0;i<q2;i++) ts.push(UNIT2);
-    for(let i=0;i<q1;i++) ts.push(UNIT1);
-    return ts;
-  }
-  function build(n){
-    const tokens = tokensFrom(n);
-    const mixed = fisherYates(tokens.slice());
-    const text = mixed.join('');
-    $out.textContent = text;
-    $count.textContent = `文字数: ${text.length}`;
-    $tokens.textContent = `内訳: ${summary(tokens)}`;
-  }
-  function summary(tokens){
-    const map = new Map();
-    for(const t of tokens) map.set(t, (map.get(t) || 0) + 1);
-    const parts = [];
-    if (map.get(UNIT6A)) parts.push(`${UNIT6A}×${map.get(UNIT6A)}`);
-    if (map.get(UNIT6B)) parts.push(`${UNIT6B}×${map.get(UNIT6B)}`);
-    if (map.get(UNIT3)) parts.push(`${UNIT3}×${map.get(UNIT3)}`);
-    if (map.get(UNIT2)) parts.push(`${UNIT2}×${map.get(UNIT2)}`);
-    if (map.get(UNIT1)) parts.push(`${UNIT1}×${map.get(UNIT1)}`);
-    return parts.join(' + ') || '-';
-  }
-
-  // ====== 入力イベント（スライダー/数値直入力） ======
-  function onChange(n){
+    let n = Number(digits);
     n = clampInt(n, 1, 100000);
-    syncInputs(n);
-    build(n);
-  }
-  $len.addEventListener('input', () => onChange($len.value));
-  $lenNum.addEventListener('input', () => onChange($lenNum.value));
+    lastCommitted = n;
+    $len.value = String(n);
+    $val.textContent = String(n);
+    $lenNum.classList.remove('invalid');
+    build(n); // 入力中も即時生成
+  });
+  $lenNum.addEventListener('blur', commitNum);
+  $lenNum.addEventListener('keydown', (e)=>{ if(e.key==='Enter') { e.preventDefault(); commitNum(); $lenNum.blur(); } });
 
-  // ====== 再生成（同じ長さで並びを再ランダム化） ======
-  $regen.addEventListener('click', () => {
-    const n = clampInt($len.value, 1, 100000);
-    build(n);
+  // --- 再生成
+  document.getElementById('regen').addEventListener('click', ()=>{ commitNum(); });
+
+  // --- 共有シート（簡略版）
+  function makeSeed(){ if(window.crypto&&crypto.getRandomValues){const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]>>>0;} return (Date.now()^Math.floor(Math.random()*1e9))>>>0; }
+  function makeShareUrl(n,seed){const u=new URL(location.href.split('#')[0]); u.searchParams.set('n',String(n)); u.searchParams.set('seed',String(seed)); return u.toString();}
+  function getShareLinkWithSeed(){ const n=lastCommitted; const seed=(new URLSearchParams(location.search).get('seed')) ?? makeSeed(); return makeShareUrl(n, Number(seed)); }
+  $shareOpen.addEventListener('click', ()=> $shareSheet.showModal());
+  $shareClose.addEventListener('click', ()=> $shareSheet.close());
+  $shareSheet.addEventListener('click', (e)=>{ if(e.target=== $shareSheet) $shareSheet.close(); });
+  $shareSheet.querySelectorAll('.share-item').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const kind=el.getAttribute('data-kind');
+      const url=getShareLinkWithSeed();
+      const text=`セミジェネレーター（${lastCommitted}文字）\n${($out.textContent||'').slice(0,160)}${($out.textContent||'').length>160?'…':''}\n#セミジェネレーター`;
+      if(kind==='link'){
+        try{ await navigator.clipboard.writeText(url); el.textContent='コピーしました'; setTimeout(()=>el.textContent='共有リンクをコピー',1200);}catch{ prompt('このURLを共有してね', url); }
+      } else if(kind==='twitter'){
+        const limit=280-1-23; const base=text; const trimmed=[...base].slice(0,limit).join('');
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(trimmed)}&url=${encodeURIComponent(url)}`,'_blank','noopener');
+      } else if(kind==='line'){
+        const msg=`${text}\n${url}`; if(navigator.share){ try{ await navigator.share({text:msg,title:'セミジェネレーター'}); }catch{} } else { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`,'_blank','noopener'); }
+      } else if(kind==='instagram'){
+        const msg=`${text}\n${url}`; if(navigator.share){ try{ await navigator.share({title:'セミジェネレーター',text:msg}); }catch{} } else { try{ await navigator.clipboard.writeText(msg); alert('共有テキストとURLをコピーしたよ。Instagramで貼り付けてね！'); }catch{ prompt('このテキストをInstagramに貼り付けてね', msg); } }
+      } else if(kind==='bluesky'){
+        const msg=`${text}\n${url}`; window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(msg)}`,'_blank','noopener');
+      }
+    });
   });
 
-  // ====== 共有：長さ + シード固定のURLをコピー ======
-  function makeSeed(){
-    // 32bit 正数。暗号学的ランダムがあれば使用
-    if (window.crypto && crypto.getRandomValues){
-      const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] >>> 0;
-    }
-    return (Date.now() ^ Math.floor(Math.random()*1e9)) >>> 0;
-  }
-  $share.addEventListener('click', async () => {
-    const n = clampInt($len.value, 1, 100000);
-    const seed = makeSeed();
-    const u = new URL(location.href.split('#')[0]);
-    u.searchParams.set('n', String(n));
-    u.searchParams.set('seed', String(seed));
-    try {
-      await navigator.clipboard.writeText(u.toString());
-      const old = $share.textContent; $share.textContent = 'URLをコピーしたよ！';
-      setTimeout(() => $share.textContent = old, 1200);
-    } catch {
-      // コピー失敗時は一時的にテキスト表示
-      prompt('このURLを共有してね', u.toString());
-    }
-  });
-
-  // ====== コピー ======
-  $copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText($out.textContent || '');
-      const old = $copy.textContent; $copy.textContent = 'コピーしたよ！';
-      setTimeout(() => $copy.textContent = old, 1200);
-    } catch {}
-  });
-
-  // ====== 初期化（共有リンク対応） ======
-  let startN = 24;
-  if (urlN) startN = clampInt(urlN, 1, 100000);
-  if (urlSeed != null && Number.isFinite(urlSeed)){
-    seededRand = mulberry32(urlSeed >>> 0);
-    $shareBadge.style.display = '';
-  }
-  syncInputs(startN);
+  // 初期化
+  let startN=24; if(urlN) startN = clampInt(urlN,1,100000); if(urlSeed!=null && Number.isFinite(urlSeed)){ seededRand = mulberry32(urlSeed>>>0); $shareBadge.style.display=''; }
+  lastCommitted = startN;
+  $len.value = String(startN);
+  $lenNum.value = String(startN);
+  $val.textContent = String(startN);
   build(startN);
 })();
 </script>
