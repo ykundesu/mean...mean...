@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>セミジェネレーター</title>
+<style>
+  :root { --bg: #0f1220; --card:#171a2b; --acc:#7dd3fc; --txt:#e6e6f0; --mut:#96a0b5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px 20px; color: var(--txt);
+    background: radial-gradient(1200px 600px at 20% -10%, #1b2040 0%, #0f1220 50%, #0b0d18 100%);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, Arial, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 18px; letter-spacing: .02em; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.06); border-radius: 16px; padding: 20px; backdrop-filter: blur(4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .controls { display:grid; gap: 14px; grid-template-columns: 1fr; align-items:center; }
+  @media (min-width: 860px){ .controls { grid-template-columns: 1fr auto; } }
+  .slider-row { display:grid; gap:10px; align-items:center; grid-template-columns: 1fr 120px 1fr; }
+  .val { font-weight: 700; min-width: 80px; text-align: right; }
+  input[type=range]{ width:100%; accent-color: var(--acc); }
+  input[type=number]{ width:100%; padding: 8px 10px; font-size:16px; color: var(--txt); background: var(--card);
+    border:1px solid rgba(255,255,255,.12); border-radius: 10px; }
+  button{ padding: 10px 14px; border-radius: 10px; border:1px solid rgba(255,255,255,.14);
+    background: #23305b; color: var(--txt); cursor: pointer; font-weight: 700; }
+  .ghost{ background:#1f2540; }
+  .rowbtn{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+  .out { margin-top: 14px; background: var(--card); border:1px solid rgba(255,255,255,.12);
+    border-radius: 12px; padding: 14px; font-family: "SF Mono","Roboto Mono","Consolas","Noto Sans Mono CJK JP",monospace;
+    min-height: 72px; white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+  .meta { color: var(--mut); font-size: 14px; display:flex; gap:16px; margin-top: 8px; flex-wrap:wrap; align-items:center; }
+  .badge { font-size:12px; padding:4px 8px; border:1px solid rgba(255,255,255,.14); border-radius:8px; background:#1f2540; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>セミジェネレーター</h1>
+    <div class="card">
+      <div class="controls">
+        <div class="slider-row">
+          <input id="len" type="range" min="1" max="100000" value="24" />
+          <input id="lenNum" type="number" min="1" max="100000" value="24" />
+          <div class="val"><span id="val">24</span> 文字</div>
+        </div>
+        <div class="rowbtn">
+          <button id="regen">再生成</button>
+          <button id="share" class="ghost">共有</button>
+          <button id="copy" class="ghost">コピー</button>
+        </div>
+      </div>
+
+      <div class="out" id="out" aria-live="polite"></div>
+      <div class="meta">
+        <span id="count">文字数: 0</span>
+        <span id="tokens">内訳: -</span>
+        <span id="shareBadge" class="badge" style="display:none;">共有リンクで開いています（シード固定）</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== 定義 ======
+  const BASES = { 1:'ﾐ', 2:'ﾐﾝ', 3:'ﾐｰﾝ', 4:'ﾐﾝﾐﾝ' };
+  const UNIT6A = 'ﾐｰﾝﾐｰﾝ'; // 6文字
+  const UNIT6B = 'ﾐﾝﾐﾝﾐﾝ'; // 6文字
+  const UNIT3 = 'ﾐｰﾝ';     // 3文字
+  const UNIT2 = 'ﾐﾝ';       // 2文字
+  const UNIT1 = 'ﾐ';        // 1文字
+
+  // ====== 要素 ======
+  const $len = document.getElementById('len');
+  const $lenNum = document.getElementById('lenNum');
+  const $val = document.getElementById('val');
+  const $regen = document.getElementById('regen');
+  const $share = document.getElementById('share');
+  const $copy = document.getElementById('copy');
+  const $out = document.getElementById('out');
+  const $count = document.getElementById('count');
+  const $tokens = document.getElementById('tokens');
+  const $shareBadge = document.getElementById('shareBadge');
+
+  // ====== シード可能な RNG ======
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+  }
+  let seededRand = null; // 関数 or null
+  function rand(){ return seededRand ? seededRand() : Math.random(); }
+
+  // ====== URL パラメータ（共有受け取り） ======
+  const params = new URLSearchParams(location.search);
+  const urlN = Number(params.get('n')) || null;
+  const urlSeedStr = params.get('seed');
+  const urlSeed = urlSeedStr != null ? Number(urlSeedStr) : null;
+
+  // ====== ユーティリティ ======
+  function clampInt(v, min, max){
+    v = Math.floor(Number(v)||0); if(v < min) v = min; if(v > max) v = max; return v;
+  }
+  function syncInputs(n){
+    $len.value = String(n); $lenNum.value = String(n); $val.textContent = String(n);
+  }
+  function fisherYates(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function decompose(n){
+    const q6 = Math.floor(n / 6);
+    let r = n % 6;
+    const q3 = Math.floor(r / 3);
+    r %= 3;
+    const q2 = Math.floor(r / 2);
+    r %= 2;
+    const q1 = r;
+    return { q6, q3, q2, q1 };
+  }
+  function tokensFrom(n){
+    if (n <= 0) return [];
+    if (n <= 4) return [BASES[n]];
+    const { q6, q3, q2, q1 } = decompose(n);
+    const ts = [];
+    for(let i=0;i<q6;i++) ts.push(rand() < 0.5 ? UNIT6A : UNIT6B);
+    for(let i=0;i<q3;i++) ts.push(UNIT3);
+    for(let i=0;i<q2;i++) ts.push(UNIT2);
+    for(let i=0;i<q1;i++) ts.push(UNIT1);
+    return ts;
+  }
+  function build(n){
+    const tokens = tokensFrom(n);
+    const mixed = fisherYates(tokens.slice());
+    const text = mixed.join('');
+    $out.textContent = text;
+    $count.textContent = `文字数: ${text.length}`;
+    $tokens.textContent = `内訳: ${summary(tokens)}`;
+  }
+  function summary(tokens){
+    const map = new Map();
+    for(const t of tokens) map.set(t, (map.get(t) || 0) + 1);
+    const parts = [];
+    if (map.get(UNIT6A)) parts.push(`${UNIT6A}×${map.get(UNIT6A)}`);
+    if (map.get(UNIT6B)) parts.push(`${UNIT6B}×${map.get(UNIT6B)}`);
+    if (map.get(UNIT3)) parts.push(`${UNIT3}×${map.get(UNIT3)}`);
+    if (map.get(UNIT2)) parts.push(`${UNIT2}×${map.get(UNIT2)}`);
+    if (map.get(UNIT1)) parts.push(`${UNIT1}×${map.get(UNIT1)}`);
+    return parts.join(' + ') || '-';
+  }
+
+  // ====== 入力イベント（スライダー/数値直入力） ======
+  function onChange(n){
+    n = clampInt(n, 1, 100000);
+    syncInputs(n);
+    build(n);
+  }
+  $len.addEventListener('input', () => onChange($len.value));
+  $lenNum.addEventListener('input', () => onChange($lenNum.value));
+
+  // ====== 再生成（同じ長さで並びを再ランダム化） ======
+  $regen.addEventListener('click', () => {
+    const n = clampInt($len.value, 1, 100000);
+    build(n);
+  });
+
+  // ====== 共有：長さ + シード固定のURLをコピー ======
+  function makeSeed(){
+    // 32bit 正数。暗号学的ランダムがあれば使用
+    if (window.crypto && crypto.getRandomValues){
+      const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] >>> 0;
+    }
+    return (Date.now() ^ Math.floor(Math.random()*1e9)) >>> 0;
+  }
+  $share.addEventListener('click', async () => {
+    const n = clampInt($len.value, 1, 100000);
+    const seed = makeSeed();
+    const u = new URL(location.href.split('#')[0]);
+    u.searchParams.set('n', String(n));
+    u.searchParams.set('seed', String(seed));
+    try {
+      await navigator.clipboard.writeText(u.toString());
+      const old = $share.textContent; $share.textContent = 'URLをコピーしたよ！';
+      setTimeout(() => $share.textContent = old, 1200);
+    } catch {
+      // コピー失敗時は一時的にテキスト表示
+      prompt('このURLを共有してね', u.toString());
+    }
+  });
+
+  // ====== コピー ======
+  $copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText($out.textContent || '');
+      const old = $copy.textContent; $copy.textContent = 'コピーしたよ！';
+      setTimeout(() => $copy.textContent = old, 1200);
+    } catch {}
+  });
+
+  // ====== 初期化（共有リンク対応） ======
+  let startN = 24;
+  if (urlN) startN = clampInt(urlN, 1, 100000);
+  if (urlSeed != null && Number.isFinite(urlSeed)){
+    seededRand = mulberry32(urlSeed >>> 0);
+    $shareBadge.style.display = '';
+  }
+  syncInputs(startN);
+  build(startN);
+})();
+</script>
+</body>
+</html>
